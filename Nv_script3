@@ -1,0 +1,323 @@
+--[[
+🛡️ Ultimate GUI Protection (NV Styled - Black Theme)
+Created by: zombie321123555
+]]
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Rep = game:GetService("ReplicatedStorage")
+
+local lp = Players.LocalPlayer
+local pgui = lp:WaitForChild("PlayerGui")
+
+local PASSWORD = "مصطفى_احمد" -- كلمة السر
+local blockedWords = {"log", "clog", "nv", "alert", "cmd", "cmdbar", "admin", "bchat"}
+local enabled = false
+local blocks = 0
+local countedBlocks = {}
+
+-- إنشاء الشاشة الرئيسية
+local sg = Instance.new("ScreenGui")
+sg.Name = "UltimateGUIProtection"
+sg.ResetOnSpawn = false
+sg.IgnoreGuiInset = true
+sg.Parent = pgui
+
+------------------------------
+-- نظام السحب (Smooth Dragging)
+------------------------------
+local function makeDraggable(gui)
+	local dragging, dragInput, dragStart, startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		gui.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+------------------------------
+-- KEY SYSTEM (واجهة كلمة السر)
+------------------------------
+
+local keyFrame = Instance.new("Frame")
+keyFrame.Size = UDim2.new(0, 280, 0, 160)
+keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+keyFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- أسود
+keyFrame.BorderSizePixel = 0
+keyFrame.Active = true
+keyFrame.Parent = sg
+Instance.new("UICorner", keyFrame).CornerRadius = UDim.new(0, 14)
+
+makeDraggable(keyFrame)
+
+local keyGlow = Instance.new("UIStroke", keyFrame)
+keyGlow.Thickness = 2
+keyGlow.Color = Color3.fromRGB(50, 255, 50)
+keyGlow.Transparency = 0.2
+
+local keyTitle = Instance.new("TextLabel")
+keyTitle.Size = UDim2.new(1, 0, 0, 35)
+keyTitle.Text = "أدخل كلمة السر"
+keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyTitle.Font = Enum.Font.GothamBold
+keyTitle.TextSize = 15
+keyTitle.BackgroundTransparency = 1
+keyTitle.Parent = keyFrame
+
+local keyInput = Instance.new("TextBox")
+keyInput.Size = UDim2.new(0.85, 0, 0, 38)
+keyInput.Position = UDim2.new(0.075, 0, 0.3, 0)
+keyInput.PlaceholderText = "اكتب كلمة السر هنا..."
+keyInput.Text = ""
+keyInput.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- أسود داكن للمدخلات
+keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyInput.Font = Enum.Font.Gotham
+keyInput.TextSize = 14
+keyInput.Parent = keyFrame
+Instance.new("UICorner", keyInput).CornerRadius = UDim.new(0, 8)
+
+local keySubmit = Instance.new("TextButton")
+keySubmit.Size = UDim2.new(0.85, 0, 0, 38)
+keySubmit.Position = UDim2.new(0.075, 0, 0.65, 0)
+keySubmit.Text = "تأكيد"
+keySubmit.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+keySubmit.TextColor3 = Color3.fromRGB(255, 255, 255)
+keySubmit.Font = Enum.Font.GothamBold
+keySubmit.TextSize = 14
+keySubmit.Parent = keyFrame
+Instance.new("UICorner", keySubmit).CornerRadius = UDim.new(0, 8)
+
+------------------------------
+-- PANEL (اللوحة الرئيسية)
+------------------------------
+
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 300, 0, 180)
+panel.Position = UDim2.new(0.5, 0, 0.5, 0)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- أسود
+panel.BorderSizePixel = 0
+panel.Active = true
+panel.Visible = false
+panel.Parent = sg
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 14)
+
+makeDraggable(panel)
+
+-- توهج أخضر متناسق مع الشعار
+local Glow = Instance.new("UIStroke", panel)
+Glow.Thickness = 2.4
+Glow.Color = Color3.fromRGB(50, 255, 50)
+Glow.Transparency = 0.2
+
+-- شريط العنوان
+local pTitle = Instance.new("TextLabel")
+pTitle.Size = UDim2.new(1, 0, 0, 42)
+pTitle.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- أسود داكن للشريط العلوي
+pTitle.Text = "حماية كلان Nv"
+pTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+pTitle.Font = Enum.Font.GothamBold
+pTitle.TextSize = 15
+pTitle.Parent = panel
+Instance.new("UICorner", pTitle).CornerRadius = UDim.new(0, 9)
+
+local pStroke = Instance.new("UIStroke", pTitle)
+pStroke.Color = Color3.fromRGB(50, 255, 50)
+pStroke.Thickness = 1.4
+pStroke.Transparency = 0.35
+
+-- زر إغلاق اللوحة (X)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -36, 0, 6)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.BackgroundTransparency = 1
+closeBtn.Parent = panel
+
+closeBtn.MouseButton1Click:Connect(function()
+	panel.Visible = false
+end)
+
+-- حالة الحماية
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0, 28)
+status.Position = UDim2.new(0, 0, 0, 50)
+status.Text = "الحالة: معطلة"
+status.TextColor3 = Color3.fromRGB(255, 80, 80)
+status.BackgroundTransparency = 1
+status.Font = Enum.Font.Gotham
+status.TextSize = 14
+status.Parent = panel
+
+-- عداد المحظورات
+local counter = Instance.new("TextLabel")
+counter.Size = UDim2.new(1, 0, 0, 28)
+counter.Position = UDim2.new(0, 0, 0, 78)
+counter.Text = "المحظورات: 0"
+counter.TextColor3 = Color3.fromRGB(255, 255, 255)
+counter.BackgroundTransparency = 1
+counter.Font = Enum.Font.Gotham
+counter.TextSize = 14
+counter.Parent = panel
+
+-- زر التفعيل / التعطيل
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0.85, 0, 0, 42)
+toggle.Position = UDim2.new(0.075, 0, 0, 120)
+toggle.Text = "تشغيل الحماية"
+toggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 15
+toggle.Parent = panel
+Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 12)
+
+------------------------------
+-- CORE LOGIC (الحماية)
+------------------------------
+
+local function nukeRemote()
+	for _, obj in ipairs(Rep:GetDescendants()) do
+		if obj:IsA("RemoteEvent") and obj.Name:lower():find("executeclientcommand") then
+			obj:Destroy()
+		end
+	end
+end
+
+Rep.DescendantAdded:Connect(function(obj)
+	if enabled and obj:IsA("RemoteEvent") and obj.Name:lower():find("executeclientcommand") then
+		obj:Destroy()
+	end
+end)
+
+local function isBlocked(name)
+	name = name:lower()
+	for _, w in ipairs(blockedWords) do
+		if name:find(w, 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
+local function blockGui(gui)
+	if enabled and gui ~= sg and isBlocked(gui.Name) then
+		if not countedBlocks[gui] then
+			blocks += 1
+			counter.Text = "المحظورات: " .. blocks
+			countedBlocks[gui] = true
+		end
+		gui:Destroy()
+	end
+end
+
+pgui.ChildAdded:Connect(function(c)
+	task.defer(function()
+		blockGui(c)
+	end)
+end)
+
+local function scanAllGuis()
+	if enabled then
+		for _, g in ipairs(pgui:GetChildren()) do
+			blockGui(g)
+		end
+	end
+end
+
+toggle.MouseButton1Click:Connect(function()
+	enabled = not enabled
+
+	if enabled then  
+		toggle.Text = "تعطيل الحماية"  
+		toggle.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+		status.Text = "الحالة: مفعلة"  
+		status.TextColor3 = Color3.fromRGB(90, 255, 120)  
+		nukeRemote()  
+		scanAllGuis()
+	else  
+		toggle.Text = "تشغيل الحماية"  
+		toggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		status.Text = "الحالة: معطلة"  
+		status.TextColor3 = Color3.fromRGB(255, 80, 80)  
+	end
+end)
+
+------------------------------
+-- TOGGLE BUTTON (زر الفتح والإغلاق النصي المتحرك)
+------------------------------
+
+local openCloseBtn = Instance.new("TextButton")
+openCloseBtn.Size = UDim2.new(0, 110, 0, 40)
+openCloseBtn.Position = UDim2.new(1, -130, 0.5, -20)
+openCloseBtn.Text = "فتح / إغلاق"
+openCloseBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- أسود
+openCloseBtn.TextColor3 = Color3.fromRGB(50, 255, 50)
+openCloseBtn.Font = Enum.Font.GothamBold
+openCloseBtn.TextSize = 14
+openCloseBtn.Active = true
+openCloseBtn.Visible = false
+openCloseBtn.Parent = sg
+
+Instance.new("UICorner", openCloseBtn).CornerRadius = UDim.new(0, 10)
+
+makeDraggable(openCloseBtn)
+
+local btnGlow = Instance.new("UIStroke", openCloseBtn)
+btnGlow.Thickness = 2
+btnGlow.Color = Color3.fromRGB(50, 255, 50)
+btnGlow.Transparency = 0.3
+
+openCloseBtn.MouseButton1Click:Connect(function()
+	panel.Visible = not panel.Visible
+end)
+
+------------------------------
+-- التحقق من كلمة السر
+------------------------------
+
+keySubmit.MouseButton1Click:Connect(function()
+	if keyInput.Text == PASSWORD then
+		keyFrame:Destroy()
+		panel.Visible = true
+		openCloseBtn.Visible = true
+	else
+		keyInput.Text = ""
+		keyInput.PlaceholderText = "كلمة السر خاطئة!"
+		keyInput.PlaceholderColor3 = Color3.fromRGB(255, 80, 80)
+	end
+end)
